@@ -164,6 +164,6 @@ const warns = results.filter((r) => r.status === "WARN");
 console.log(`\n== Summary: ${results.length - fails.length - warns.length} ok, ${warns.length} warning(s), ${fails.length} failure(s) ==`);
 for (const r of [...fails, ...warns]) console.log(`  [${r.status}] ${r.step}${r.detail ? " — " + firstLine(r.detail) : ""}`);
 if (!fails.length) {
-  console.log("\nNext: open this folder in Orca (or run `claude` here), then `/ae-new smoke` and follow docs/install-windows.md §5.");
+  console.log("\nNext: open this folder in Orca (or run `claude` here), then `/ae-new smoke`.");
 }
 process.exit(fails.length ? 1 : 0);

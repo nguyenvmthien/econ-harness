@@ -1,26 +1,14 @@
 # econ-harness
 
-A workspace for applied economics research in R with AI agents: literature search, research design, data cleaning, estimation, manuscript writing and review.
+Private research workspace: applied economics in R with Claude Code running inside Orca.
 
-- **Main agent:** Claude Code running inside [Orca](https://github.com/stablyai/orca). Codex and opencode read `AGENTS.md`; omp is optional.
-- **Portable:** no absolute paths and no API keys in the repository, so it works wherever it is cloned.
-- **Raw data is protected:** agents cannot write to `data/raw`; a hook blocks every write there.
-
-## Installation
-
-Windows is the main machine:
+## Setup
 
 ```powershell
-git clone https://github.com/<user>/econ-harness.git C:\econ
-cd C:\econ
 powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1
 ```
 
-On macOS (for testing): `./setup-mac.sh`.
-
-Both scripts end by running `node harness/setup/setup.mjs`, which builds the MCP server, generates `.claude/`, installs R packages, registers the MCP server and verifies the result. It is safe to rerun. Full guide and checklist: [docs/install-windows.md](docs/install-windows.md).
-
-**Requirements:** R 4.6 (plus Rtools46 on Windows), RStudio, Quarto, Git, Node.js 18 or later. Python 3 is only needed to import journal rankings.
+Safe to rerun. It ends with a `PASS / WARN / FAIL` summary.
 
 ## Usage
 
@@ -61,7 +49,7 @@ harness/
   setup/                      setup.mjs, install-packages.R
   tests/                      hook and audit tests
 template/                project skeleton that /ae-new copies to projects/<slug>
-docs/                    installation and workflow guides
+docs/workflow.md         how each step works
 ```
 
 `.claude/` and `template/.claude/` are **generated**. To change a command, agent or skill, edit it in `harness/`, then run:
