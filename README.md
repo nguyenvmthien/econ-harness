@@ -1,14 +1,14 @@
 # econ-harness
 
-Bộ khung làm nghiên cứu kinh tế ứng dụng bằng R cùng agent AI: từ tìm tài liệu, lập kế hoạch, làm sạch dữ liệu, ước lượng, đến viết bản thảo và phản biện.
+A workspace for applied economics research in R with AI agents: literature search, research design, data cleaning, estimation, manuscript writing and review.
 
-- **Agent chính:** Claude Code chạy trong [Orca](https://github.com/stablyai/orca). Codex và opencode đọc `AGENTS.md`; omp là tuỳ chọn.
-- **Di động:** repo không chứa đường dẫn tuyệt đối hay khoá API, nên clone ở đâu cũng chạy được.
-- **An toàn dữ liệu:** agent không được ghi vào `data/raw`. Một hook chặn mọi lệnh ghi vào đó.
+- **Main agent:** Claude Code running inside [Orca](https://github.com/stablyai/orca). Codex and opencode read `AGENTS.md`; omp is optional.
+- **Portable:** no absolute paths and no API keys in the repository, so it works wherever it is cloned.
+- **Raw data is protected:** agents cannot write to `data/raw`; a hook blocks every write there.
 
-## Cài đặt
+## Installation
 
-Windows là máy dùng chính:
+Windows is the main machine:
 
 ```powershell
 git clone https://github.com/<user>/econ-harness.git C:\econ
@@ -16,21 +16,21 @@ cd C:\econ
 powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1
 ```
 
-Trên macOS (để chạy thử): `./setup-mac.sh`.
+On macOS (for testing): `./setup-mac.sh`.
 
-Cả hai script cuối cùng đều gọi `node harness/setup/setup.mjs`. Script này build MCP, sinh `.claude/`, cài gói R, đăng ký MCP và tự kiểm tra; chạy lại bao nhiêu lần cũng được. Hướng dẫn đầy đủ và checklist ở [docs/install-windows.md](docs/install-windows.md).
+Both scripts end by running `node harness/setup/setup.mjs`, which builds the MCP server, generates `.claude/`, installs R packages, registers the MCP server and verifies the result. It is safe to rerun. Full guide and checklist: [docs/install-windows.md](docs/install-windows.md).
 
-**Cần có:** R 4.6 (thêm Rtools46 nếu dùng Windows), RStudio, Quarto, Git, Node.js 18 trở lên. Python 3 chỉ cần khi import bảng xếp hạng tạp chí.
+**Requirements:** R 4.6 (plus Rtools46 on Windows), RStudio, Quarto, Git, Node.js 18 or later. Python 3 is only needed to import journal rankings.
 
-## Sử dụng
+## Usage
 
-Mở workspace trong Orca, chọn agent Claude, rồi:
+Open the workspace in Orca, pick the Claude agent, then:
 
 ```
-/ae-new fdi_vn        # tạo projects/fdi_vn từ template/ (một repo Git riêng)
+/ae-new fdi_vn        # create projects/fdi_vn from template/ (its own Git repository)
 ```
 
-Sau đó mở `projects/fdi_vn` thành một workspace riêng và làm theo các bước:
+Open `projects/fdi_vn` as a separate workspace and work through the steps:
 
 ```mermaid
 flowchart LR
@@ -38,38 +38,38 @@ flowchart LR
   data -.-> phacking -.-> hark -.-> write
 ```
 
-| Bước | Lệnh |
+| Step | Commands |
 |---|---|
-| Tạo project | `/ae-new <slug>` |
-| Tài liệu, trích dẫn | `/ae-lit`, `/ae-cite <DOI>` |
-| Thiết kế nghiên cứu | `/ae-plan`, `/ae-exogenous [câu hỏi]` |
-| Dữ liệu, ước lượng | `/ae-data`, `/ae-estimate`, `/ae-consolidate` |
-| Khám phá (exploratory) | `/ae-phacking [phạm vi]`, `/ae-hark [ID...]` |
-| Viết, phản biện, xuất bản | `/ae-write <mục>`, `/ae-review`, `/ae-final [style]` |
+| Create a project | `/ae-new <slug>` |
+| Literature and citations | `/ae-lit`, `/ae-cite <DOI>` |
+| Research design | `/ae-plan`, `/ae-exogenous [question]` |
+| Data and estimation | `/ae-data`, `/ae-estimate`, `/ae-consolidate` |
+| Exploration | `/ae-phacking [scope]`, `/ae-hark [ID...]` |
+| Writing, review, release | `/ae-write <section>`, `/ae-review`, `/ae-final [style]` |
 
-Chi tiết từng bước, cách xuất bảng và render bản thảo: [docs/workflow.md](docs/workflow.md).
+Details for each step, exporting tables and rendering the manuscript: [docs/workflow.md](docs/workflow.md).
 
-## Cấu trúc
+## Layout
 
 ```
-AGENTS.md, CLAUDE.md     luật cho agent (mọi agent / riêng Claude Code)
+AGENTS.md, CLAUDE.md     rules for agents (all agents / Claude Code only)
 harness/
-  commands/ agents/ skills/   nguồn của 13 lệnh, 7 subagent, 9 skill
-  claude/                     hook và settings.json cho Claude Code
-  mcp/research-discovery/     MCP tìm tài liệu (Semantic Scholar, OpenAlex, Elsevier, SJR/ABDC)
-  scripts/sync-agents.mjs     sinh .claude/ từ các nguồn trên
+  commands/ agents/ skills/   sources for 13 commands, 7 subagents, 9 skills
+  claude/                     Claude Code hook and settings.json
+  mcp/research-discovery/     literature MCP server (Semantic Scholar, OpenAlex, Elsevier, SJR/ABDC)
+  scripts/sync-agents.mjs     generates .claude/ from the sources above
   setup/                      setup.mjs, install-packages.R
-  tests/                      kiểm tra hook và audit
-template/                khung project mà /ae-new chép sang projects/<slug>
-docs/                    hướng dẫn cài đặt và quy trình
+  tests/                      hook and audit tests
+template/                project skeleton that /ae-new copies to projects/<slug>
+docs/                    installation and workflow guides
 ```
 
-`.claude/` và `template/.claude/` là **file sinh tự động**. Muốn sửa lệnh, agent hay skill thì sửa trong `harness/`, rồi chạy:
+`.claude/` and `template/.claude/` are **generated**. To change a command, agent or skill, edit it in `harness/`, then run:
 
 ```bash
-node harness/scripts/sync-agents.mjs            # thêm --projects để cập nhật cả project đang có
+node harness/scripts/sync-agents.mjs            # add --projects to update existing projects too
 node harness/tests/raw-guard.test.mjs
 node harness/scripts/sync-agents.mjs --check
 ```
 
-`projects/` và `data_hub/` không nằm trong repo này: mỗi project là một repo Git riêng.
+`projects/` and `data_hub/` are not part of this repository: each project is its own Git repository.

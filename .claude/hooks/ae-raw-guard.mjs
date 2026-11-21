@@ -13,8 +13,8 @@ import { isAbsolute, resolve } from "node:path";
 
 const RAW = /(^|\/)data\/raw(\/|$)/;
 const MSG =
-  "ae-raw-guard: data/raw là chỉ-đọc với agent. Thêm nguồn thô bằng R/00_download.R hoặc để người dùng đặt file, " +
-  "rồi đăng ký bằng ae_register_raw() vào data/RAW_MANIFEST.csv.";
+  "ae-raw-guard: data/raw is read-only for agents. Add raw sources with R/00_download.R or ask the user to place the file, " +
+  "then register it in data/RAW_MANIFEST.csv with ae_register_raw().";
 const MUTATING =
   /\b(rm|del|erase|rmdir|rd|mv|move|ren|rename|cp|xcopy|robocopy|tee|touch|truncate|sed\s+-i|Remove-Item|Move-Item|Rename-Item|Copy-Item|Set-Content|Add-Content|Out-File|New-Item|Clear-Content|write\.csv|write\.table|fwrite|saveRDS|writeLines|write_csv|write_rds|write_dta|write_xlsx|file\.remove|file\.rename|file\.copy|file\.create|unlink|download\.file|to_csv|to_parquet|to_excel)\b/i;
 const REDIRECT_INTO_RAW = /(^|[^|=<\-])>>?\s*["']?[^\s"']*data[\\/]+raw/i;

@@ -1,4 +1,4 @@
-Next: <một việc kế tiếp>
+Next: <one next task>
 
 ## {{DATE}}
 - [DECISION] Project initialized.

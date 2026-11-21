@@ -2,9 +2,9 @@
 
 # Claude Code / Orca
 
-- Nguồn harness là `harness/` (commands, agents, skills, hook). `.claude/` ở gốc và `template/.claude/` là **file sinh tự động** bởi `node harness/scripts/sync-agents.mjs`; không sửa tay. Sửa `harness/` → chạy lại sync → commit cả hai.
-- `/ae-new <slug>` chạy ở gốc workspace. Mọi lệnh nghiên cứu khác chạy **trong project**: mở `projects/<slug>` làm workspace trong Orca (hoặc `cd projects/<slug>` rồi `claude`). Mỗi project mang sẵn `.claude/` copy từ template; cập nhật project cũ bằng `node harness/scripts/sync-agents.mjs --projects`.
-- MCP `research_discovery` (tool `mcp__research_discovery__*`) đăng ký ở user scope bởi `harness/setup/setup.mjs`; khoá API chỉ lấy từ biến môi trường, không ghi vào repo.
-- `data/raw` được chặn ghi bởi hook `.claude/hooks/ae-raw-guard.mjs` (PreToolUse). Nếu hook chặn nhầm, báo người dùng; không lách bằng script khác.
-- Subagent: `ae-*` trong `.claude/agents/`. Khi chạy trong Orca có thể giao phản biện độc lập (`ae-referee`, `ae-citation-check`) cho một agent khác (ví dụ Codex) qua Orca orchestration.
-- Kiểm tra sau khi sửa harness: `node harness/tests/raw-guard.test.mjs`, `node harness/scripts/sync-agents.mjs --check`, `Rscript harness/tests/audit-smoke.R`.
+- The harness sources live in `harness/` (commands, agents, skills, hook). `.claude/` at the root and `template/.claude/` are **generated** by `node harness/scripts/sync-agents.mjs`; never edit them by hand. Edit `harness/`, rerun the sync, and commit both.
+- Run `/ae-new <slug>` at the workspace root. Every other research command runs **inside the project**: open `projects/<slug>` as its own workspace in Orca (or `cd projects/<slug>` and run `claude`). Each project carries a copy of `.claude/` from the template; refresh older projects with `node harness/scripts/sync-agents.mjs --projects`.
+- The `research_discovery` MCP server (tools `mcp__research_discovery__*`) is registered at user scope by `harness/setup/setup.mjs`. API keys come only from environment variables and are never written to the repository.
+- Writes to `data/raw` are blocked by the PreToolUse hook `.claude/hooks/ae-raw-guard.mjs`. If it blocks something by mistake, tell the user; do not work around it with another script.
+- Subagents are the `ae-*` files in `.claude/agents/`. In Orca, independent reviews (`ae-referee`, `ae-citation-check`) can be handed to another agent such as Codex through Orca orchestration.
+- After changing the harness, run `node harness/tests/raw-guard.test.mjs`, `node harness/scripts/sync-agents.mjs --check` and `Rscript harness/tests/audit-smoke.R`.

@@ -4,7 +4,7 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 const ENV_ROOT = (process.env.ECON_ROOT ?? "").trim().replace(/\\/g, "/").toLowerCase();
 const ECON_ROOT = ENV_ROOT ? ENV_ROOT.replace(/\/?$/, "/") : "";
 const RAW = /\/data\/raw(\/|$)/;
-const MSG = "ae-raw-guard: data/raw là chỉ-đọc với agent. Thêm nguồn thô bằng R/00_download.R hoặc để người dùng đặt file, rồi đăng ký bằng ae_register_raw() vào data/RAW_MANIFEST.csv.";
+const MSG = "ae-raw-guard: data/raw is read-only for agents. Add raw sources with R/00_download.R or ask the user to place the file, then register it in data/RAW_MANIFEST.csv with ae_register_raw().";
 const MUTATING = /\b(rm|del|erase|rmdir|rd|mv|move|ren|rename|cp|xcopy|robocopy|Remove-Item|Move-Item|Rename-Item|Copy-Item|Set-Content|Add-Content|Out-File|New-Item|Clear-Content|write\.csv|write\.table|fwrite|saveRDS|writeLines|write_csv|write_rds|write_dta|write_xlsx|file\.remove|file\.rename|file\.copy|file\.create|unlink|download\.file|to_csv|to_parquet|to_excel)\b/i;
 function targetPaths(tool: string, input: unknown): string[] {
   if (tool === "write" && input && typeof input === "object" && !Array.isArray(input)) { const path = (input as Record<string, unknown>).path; return typeof path === "string" ? [path] : []; }

@@ -1,111 +1,111 @@
-# Quy trình làm việc
+# Workflow
 
-Tài liệu này giải thích từng bước mà README chỉ liệt kê. Luật bắt buộc cho agent nằm ở `AGENTS.md`; nếu có chỗ khác nhau thì `AGENTS.md` được ưu tiên.
+This guide explains the steps the README only lists. The binding rules for agents are in `AGENTS.md`; where the two differ, `AGENTS.md` wins.
 
-## Workspace và project
+## Workspace and projects
 
-- Lệnh `/ae-new <slug>` chạy ở gốc workspace. Nó chép `template/` sang `projects/<slug>`, khởi tạo Git và `renv`.
-- Mọi lệnh khác chạy **bên trong project**: trong Orca, thêm `projects/<slug>` thành một repository riêng; hoặc `cd projects/<slug>` rồi chạy `claude`.
-- Mỗi project mang sẵn `.claude/` của nó. Sau khi cập nhật harness, chạy `node harness/scripts/sync-agents.mjs --projects` ở gốc để cập nhật project cũ.
+- `/ae-new <slug>` runs at the workspace root. It copies `template/` to `projects/<slug>` and initialises Git and `renv`.
+- Every other command runs **inside the project**: in Orca, add `projects/<slug>` as its own repository, or `cd projects/<slug>` and run `claude`.
+- Each project carries its own `.claude/`. After updating the harness, run `node harness/scripts/sync-agents.mjs --projects` at the root to refresh existing projects.
 
-## Các bước
+## Steps
 
-### Tài liệu: `/ae-lit`, `/ae-cite`
+### Literature: `/ae-lit`, `/ae-cite`
 
-`/ae-lit` dùng MCP `research_discovery` để tìm và đọc tài liệu, ghi bằng chứng vào `literature/EVIDENCE.csv`.
+`/ae-lit` uses the `research_discovery` MCP server to find and read papers and records evidence in `literature/EVIDENCE.csv`.
 
-Chỉ thêm tài liệu vào `paper/references.bib` bằng `/ae-cite <DOI>`. Trạng thái kiểm tra của từng trích dẫn ghi ở `literature/citation_checks.csv`; ở bước `/ae-review`, subagent `ae-citation-check` kiểm lại độc lập mọi câu có trích dẫn trong bản thảo.
+References enter `paper/references.bib` only through `/ae-cite <DOI>`. The check status of each citation is kept in `literature/citation_checks.csv`; during `/ae-review` the `ae-citation-check` subagent independently rechecks every cited sentence in the manuscript.
 
-### Thiết kế: `/ae-plan`, `/ae-exogenous`
+### Design: `/ae-plan`, `/ae-exogenous`
 
-`/ae-plan` viết `PLAN.md`: câu hỏi, giả thuyết, dữ liệu, đặc tả mô hình. Kết quả nào chạy **trước khi** dòng PLAN §9 tương ứng được viết thì bị gắn nhãn EXPLORATORY và không được dùng để kết luận nhân quả.
+`/ae-plan` writes `PLAN.md`: question, hypotheses, data and model specifications. Results produced **before** the matching PLAN §9 row was written are labelled EXPLORATORY and cannot support a causal conclusion.
 
-`/ae-exogenous [câu hỏi]` tìm nguồn biến thiên ngoại sinh trước khi chọn thiết kế:
+`/ae-exogenous [question]` looks for exogenous variation before a design is chosen:
 
-- xác định estimand, tìm tối đa ba cơ chế phân bổ có tài liệu;
-- đối chiếu chi tiết chính sách hay sự kiện với nguồn gốc;
-- thử thách giả định của IV, DiD, DiD liên tục, RDD.
+- defines the estimand and searches for up to three documented assignment mechanisms;
+- checks policy and event details against primary sources;
+- stress-tests the assumptions of IV, DiD, continuous-exposure DiD and RDD.
 
-Lệnh này không chạy hồi quy, không xếp hạng theo p-value, không sửa dữ liệu, PLAN hay bản thảo. Báo cáo lưu ở `output/logs/exogenous/`.
+It does not run regressions, rank candidates by p-value, or change data, PLAN or the manuscript. Reports are saved in `output/logs/exogenous/`.
 
-### Dữ liệu và ước lượng: `/ae-data`, `/ae-estimate`, `/ae-consolidate`
+### Data and estimation: `/ae-data`, `/ae-estimate`, `/ae-consolidate`
 
-- Dữ liệu thô vào `data/raw` qua `R/00_download.R` hoặc người dùng tự đặt file, rồi đăng ký bằng `ae_register_raw()`. Agent không bao giờ sửa file thô; làm sạch luôn bằng code.
-- `R/01_build.R` tạo `data/analysis.rds`, định nghĩa biến ở `data/codebook.csv`.
-- Code ước lượng viết tự do, chạy theo thứ tự nào cũng được. Luôn đặt `vcov` rõ ràng trong `feols`.
-- `Rscript run_all.R` chạy lại toàn bộ pipeline theo thứ tự script.
+- Raw data reaches `data/raw` through `R/00_download.R` or files the user drops in, and is registered with `ae_register_raw()`. Agents never edit raw files; cleaning always happens in code.
+- `R/01_build.R` builds `data/analysis.rds`; variable definitions live in `data/codebook.csv`.
+- Estimation code is free-form and can run in any order. Always set `vcov` explicitly in `feols`.
+- `Rscript run_all.R` reruns the whole pipeline in script order.
 
-| Script | Kết quả |
+| Script | Produces |
 |---|---|
 | `R/01_build.R` | `data/analysis.rds` |
-| `R/02_describe.R` | thống kê mô tả |
-| `R/03_main.R` | mô hình chính |
-| `R/04_robustness.R` | kiểm tra độ vững |
-| `R/05_extensions.R` | mở rộng |
-| `R/99_audit.R` | `output/logs/audit.md` (đầy đủ) hoặc `audit_manuscript.md` (chỉ bản thảo) |
+| `R/02_describe.R` | descriptive statistics |
+| `R/03_main.R` | main models |
+| `R/04_robustness.R` | robustness checks |
+| `R/05_extensions.R` | extensions |
+| `R/99_audit.R` | `output/logs/audit.md` (full) or `audit_manuscript.md` (manuscript only) |
 
-### Khám phá: `/ae-phacking`, `/ae-hark`
+### Exploration: `/ae-phacking`, `/ae-hark`
 
-Hai lệnh này dành cho giai đoạn tìm hướng nghiên cứu. Mọi kết quả từ đây đều là **EXPLORATORY**.
+These two commands are for finding research directions. Everything they produce is **EXPLORATORY**.
 
-`/ae-phacking [đường dẫn/phạm vi/lưới]` rà rộng trên dữ liệu đọc được mà không cần `/ae-data`, PLAN hay codebook:
+`/ae-phacking [path/scope/grid]` searches broadly over any readable data, without `/ae-data`, PLAN or a codebook:
 
-- thử các cặp Y/X, biến kiểm soát, proxy, bộ ba IV cho 2SLS, FE, cách tính sai số chuẩn, phép biến đổi, mẫu con;
-- liệt kê riêng các nguồn biến thiên tiềm năng (chính sách, cú sốc, ngưỡng), tách bằng chứng quan sát được khỏi giả định;
-- giữ lại toàn bộ lưới, kể cả lần chạy lỗi và kết quả null. Không giới hạn số phép thử.
+- tries Y/X pairs, controls, proxies, candidate 2SLS IV triples, fixed effects, inference choices, transforms and subsamples;
+- separately lists potential sources of variation (policies, shocks, thresholds), keeping observed evidence apart from assumptions;
+- keeps the full grid, including failed runs and null results. There is no cap on the number of tests.
 
-Không gọi một nguồn biến thiên là ngoại sinh khi chưa kiểm chứng độc lập; IV có liên quan mạnh chưa có nghĩa là hợp lệ.
+Variation is never called exogenous until independently verified, and a strong first stage does not make an instrument valid.
 
-`/ae-hark [ID...]` chạy mô hình thật cùng các kiểm tra độ vững, so dấu, độ lớn, SE/CI, mẫu và chẩn đoán, ghi ma trận bằng chứng vào `output/logs/hypothesis_reframe.md`. Giả thuyết sửa lại được thêm vào PLAN §9a với `origin=post-results`; giả thuyết cũ và kết quả trái chiều vẫn giữ nguyên. Độ vững trên cùng một mẫu không phải là kiểm định độc lập hay bằng chứng nhân quả.
+`/ae-hark [ID...]` runs the actual models and robustness checks, compares sign, magnitude, SE/CI, samples and diagnostics, and writes an evidence matrix to `output/logs/hypothesis_reframe.md`. Revised hypotheses are added to PLAN §9a with `origin=post-results`; the original hypotheses and contrary results stay. Stability within one sample is neither an independent test nor causal evidence.
 
-### Viết và phản biện: `/ae-write`, `/ae-review`, `/ae-final`
+### Writing and review: `/ae-write`, `/ae-review`, `/ae-final`
 
-- `/ae-write <mục>` viết một phần bản thảo bằng tiếng Anh, rồi render HTML để xem.
-- `/ae-review` chạy lại toàn bộ pipeline, audit đầy đủ, và giao subagent `ae-referee` phản biện.
-- `/ae-final [style]` kiểm tra audit và trích dẫn, rồi mới xuất DOCX, sau khi người dùng đã xem HTML.
+- `/ae-write <section>` drafts a manuscript section in English and renders HTML for review.
+- `/ae-review` reruns the full pipeline and the full audit, and asks the `ae-referee` subagent for a referee report.
+- `/ae-final [style]` checks the audit and citations, and produces DOCX only after the user has reviewed the HTML.
 
-## Bảng kết quả
+## Results tables
 
-Bảng luôn được dựng trong R từ object mô hình, bằng `modelsummary`, `datasummary` hoặc `fixest::etable`. Không chép hệ số ra CSV rồi dựng bảng bằng tay.
+Tables are always built in R from fitted model objects with `modelsummary`, `datasummary` or `fixest::etable`. Never copy coefficients to a CSV and rebuild a table by hand.
 
 ```r
 ae_export_table(list("(1)" = m1, "(2)" = m2), "T2_baseline")
 ```
 
-Lệnh trên ghi ba file vào `output/tables/`:
+This writes three files to `output/tables/`:
 
-- `T2_baseline.html`: xem trong Viewer của RStudio (tự mở nếu chạy trong RStudio);
-- `T2_baseline.md`: bản Markdown;
-- `T2_baseline.rds`: để chèn vào bản thảo.
+- `T2_baseline.html`: view it in the RStudio Viewer (it opens automatically inside RStudio);
+- `T2_baseline.md`: Markdown version;
+- `T2_baseline.rds`: inserted into the manuscript.
 
-Loại sai số chuẩn và số cluster được đọc từ object mô hình. Mở lại một bảng bằng `ae_view_table("T2_baseline")`. Cần gửi lẻ một bảng Word thì thêm `docx = TRUE`.
+The SE type and number of clusters are read from the model object. Reopen a table with `ae_view_table("T2_baseline")`. To send a single table as Word, add `docx = TRUE`.
 
-## Render bản thảo
+## Rendering the manuscript
 
-Bản thảo là `paper/manuscript.qmd`; chèn bảng bằng `ae_table("T2_baseline")`.
+The manuscript is `paper/manuscript.qmd`; tables are inserted with `ae_table("T2_baseline")`.
 
-**Luôn xem HTML trước.** DOCX chỉ xuất ở bước cuối.
+**Always check the HTML first.** DOCX is produced only at the final step.
 
-| Lệnh | Tác dụng |
+| Command | Effect |
 |---|---|
-| `Rscript render.R` | Render HTML, mở trong Viewer |
-| `Rscript render.R docx` | Render HTML, rồi DOCX bản cuối |
-| `Rscript render.R html run` | Chạy lại toàn bộ mô hình trước khi render |
+| `Rscript render.R` | Render HTML and open it in the Viewer |
+| `Rscript render.R docx` | Render HTML, then the final DOCX |
+| `Rscript render.R html run` | Rerun every model before rendering |
 
-Trong RStudio: mở `render.R`, chỉnh `DOCX` hoặc `RUN_MODELS` ở đầu file, rồi Source (Ctrl+Shift+S). Nút Render của RStudio cũng ra HTML nhưng bỏ qua bước kiểm tra bảng còn thiếu; `render.R` thì dừng nếu bản thảo gọi một bảng chưa được xuất.
+In RStudio: open `render.R`, set `DOCX` or `RUN_MODELS` at the top, then Source it (Ctrl+Shift+S). RStudio's Render button also produces HTML but skips the missing-table check; `render.R` stops if the manuscript calls a table that has not been exported.
 
-Style Word nằm ở `paper/reference.docx`; chỉnh một lần trong Word.
+Word styles live in `paper/reference.docx`; adjust them once in Word.
 
-## Thư mục trong một project
+## Project folders
 
-| Thư mục | Nội dung |
+| Folder | Contents |
 |---|---|
-| `data/raw` | Dữ liệu nguồn, bất biến |
-| `data/analysis.rds`, `data/codebook.csv` | Dữ liệu phân tích và định nghĩa biến |
-| `R/` | Script theo thứ tự |
-| `output/` | Bảng, hình, mô hình, log |
-| `paper/` | Bản thảo |
-| `literature/` | Bằng chứng và kết quả kiểm trích dẫn |
-| `scratch/` | Thử nghiệm |
+| `data/raw` | Source data, never modified |
+| `data/analysis.rds`, `data/codebook.csv` | Analysis dataset and variable definitions |
+| `R/` | Scripts, run in order |
+| `output/` | Tables, figures, models, logs |
+| `paper/` | Manuscript |
+| `literature/` | Evidence and citation checks |
+| `scratch/` | Experiments |
 
-Hướng dẫn cho từng phương pháp (OLS/panel, IV, DiD, GMM, suy diễn) nằm ở `harness/skills/ae-methods/references/`.
+Method guides (OLS/panel, IV, DiD, GMM, inference) are in `harness/skills/ae-methods/references/`.
