@@ -1,4 +1,4 @@
-# Research projects are separate Git repos; shared data hub is local only.
+# Each research project is its own Git repository; the data hub stays on the machine.
 projects/
 data_hub/
 renv/library/

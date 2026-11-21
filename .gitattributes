@@ -1,8 +1,10 @@
-# Normalise text to LF in the repo and on checkout (Windows included); PowerShell scripts use CRLF.
+# Text is stored with LF and checked out with LF, Windows included.
+# PowerShell and batch files need CRLF.
 * text=auto eol=lf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
 *.docx binary
 *.xlsx binary
 *.xls binary
@@ -11,3 +13,8 @@
 *.pdf binary
 *.png binary
 *.jpg binary
+
+# Generated from harness/ by harness/scripts/sync-agents.mjs; collapsed in GitHub diffs.
+.claude/** linguist-generated
+template/.claude/** linguist-generated
+harness/mcp/research-discovery/package-lock.json linguist-generated
