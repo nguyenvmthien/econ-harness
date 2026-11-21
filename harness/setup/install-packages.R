@@ -3,7 +3,7 @@
 #   Rscript harness/setup/install-packages.R core     # core only
 # Core packages are required (audit, tables, render); a failure exits 1.
 # Method packages back the ae-methods playbooks; failures are reported but do not stop setup.
-# Pinned versions from the spec: contdid 0.1.1, ivDiag 1.0.6, fwildclusterboot 0.14.3.
+# Versions the method playbooks were tested with are listed in `tested`; others still work but are flagged.
 
 args <- commandArgs(trailingOnly = TRUE)
 only_core <- "core" %in% args
@@ -28,7 +28,7 @@ methods <- c(
   "plm", "AER", "car", "clubSandwich", "sensemakr", "did", "didimputation", "bacondecomp",
   "HonestDiD", "contdid", "ivDiag", "fwildclusterboot"
 )
-pinned <- c(contdid = "0.1.1", ivDiag = "1.0.6", fwildclusterboot = "0.14.3")
+tested <- c(contdid = "0.1.1", ivDiag = "1.0.6", fwildclusterboot = "0.14.3")
 
 have <- function(p) requireNamespace(p, quietly = TRUE)
 
@@ -49,7 +49,7 @@ cat("\n== R package report ==\n")
 cat("R version:", R.version.string, "\n")
 for (p in c(core, if (!only_core) methods)) {
   v <- if (have(p)) as.character(utils::packageVersion(p)) else "MISSING"
-  note <- if (p %in% names(pinned) && v != "MISSING" && v != pinned[[p]]) paste0("  (spec: ", pinned[[p]], ")") else ""
+  note <- if (p %in% names(tested) && v != "MISSING" && v != tested[[p]]) paste0("  (tested: ", tested[[p]], ")") else ""
   cat(sprintf("  %-18s %s%s\n", p, v, note))
 }
 if (.Platform$OS.type == "windows" && have("pkgbuild")) {

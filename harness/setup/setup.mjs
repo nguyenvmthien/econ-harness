@@ -4,11 +4,11 @@
  *
  *   node harness/setup/setup.mjs [--skip-r] [--no-register] [--offline] [--no-verify]
  *
- *   1. check prerequisites (node, git, Rscript, quarto, pandoc, python, claude, orca)
+ *   1. check prerequisites (node, git, Rscript, quarto, python, claude, orca)
  *   2. generate .claude/ (Claude Code layer) from harness/            -> harness/scripts/sync-agents.mjs
  *   3. build the research-discovery MCP server (npm ci + build)
  *   4. write machine-local omp configs (.omp/config.yml, template/.omp/config.yml; git-ignored)
- *   5. create template/paper/reference.docx with pandoc if it is missing
+ *   5. create template/paper/reference.docx (Quarto's bundled pandoc) if it is missing
  *   6. install R packages                                              (--skip-r to skip)
  *   7. register the MCP server for Claude Code (user scope) and Codex   (--no-register to skip)
  *      API keys come ONLY from env vars OPENALEX_EMAIL, SEMANTIC_SCHOLAR_API_KEY, ELSEVIER_API_KEY;
@@ -59,7 +59,6 @@ const tools = {
   git: ["--version", true],
   Rscript: ["--version", true],
   quarto: ["--version", true],
-  pandoc: ["--version", true],
   [WIN ? "python" : "python3"]: ["--version", false],
   claude: ["--version", false],
 };
@@ -106,9 +105,9 @@ if (results.some((r) => r.status === "FAIL" && r.step.startsWith("node"))) proce
 {
   const docx = join(ROOT, "template", "paper", "reference.docx");
   if (existsSync(docx)) report("PASS", "template/paper/reference.docx", "exists");
-  else if (!present.pandoc) report("FAIL", "template/paper/reference.docx", "pandoc missing");
+  else if (!present.quarto) report("FAIL", "template/paper/reference.docx", "quarto missing");
   else {
-    const r = run("pandoc", ["-o", docx, "--print-default-data-file", "reference.docx"]);
+    const r = run("quarto", ["pandoc", "-o", docx, "--print-default-data-file", "reference.docx"]);
     report(r.ok ? "PASS" : "FAIL", "template/paper/reference.docx", r.ok ? "created — open it in Word once, adjust styles, commit" : tail(r.out));
   }
 }
@@ -165,6 +164,6 @@ const warns = results.filter((r) => r.status === "WARN");
 console.log(`\n== Summary: ${results.length - fails.length - warns.length} ok, ${warns.length} warning(s), ${fails.length} failure(s) ==`);
 for (const r of [...fails, ...warns]) console.log(`  [${r.status}] ${r.step}${r.detail ? " — " + firstLine(r.detail) : ""}`);
 if (!fails.length) {
-  console.log("\nNext: open this folder in Orca (or run `claude` here), then `/ae-new smoke` and follow docs/CAI-DAT-WINDOWS.md §5.");
+  console.log("\nNext: open this folder in Orca (or run `claude` here), then `/ae-new smoke` and follow docs/install-windows.md §5.");
 }
 process.exit(fails.length ? 1 : 0);
