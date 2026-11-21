@@ -1,0 +1,5 @@
+renv/library/
+.claude/settings.local.json
+.Rproj.user/
+.Rhistory
+.RData

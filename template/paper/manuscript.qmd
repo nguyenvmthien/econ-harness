@@ -1,0 +1,60 @@
+---
+title: "{{TITLE}}"
+author: "{{AUTHOR}}"
+date: "{{DATE}}"
+abstract: "<150–200 word abstract>"
+keywords: []
+JEL: []
+---
+
+```{r}
+#| include: false
+here::i_am("paper/manuscript.qmd")
+source(here::here("R/00_packages.R")); source(here::here("R/functions.R"))
+```
+
+<!-- State the question, contribution, and findings. See skill://ae-writing. -->
+# Introduction
+
+<!-- Synthesize mechanisms, evidence, and hypotheses. See skill://ae-writing. -->
+# Related literature and hypotheses
+
+<!-- Define sample, variables, and design; report assumptions. See skill://ae-methods. -->
+# Data and empirical strategy
+
+## Data and sample
+
+## Variables
+
+## Empirical specification {#sec-specification}
+
+$$
+y_{it} = \beta D_{it} + X_{it}'\gamma + \alpha_i + \lambda_t + \varepsilon_{it}.
+$$ {#eq-main}
+
+## Identification
+
+<!-- Present results in PLAN order, with estimates from saved R objects. -->
+# Results
+
+## Descriptive statistics
+
+## Baseline results
+
+<!-- Tables are exported by the R scripts; the manuscript only displays them. Insert one with a chunk
+     containing `#| label: tbl-baseline`, `#| tbl-cap: "Baseline results"` and a call to ae_table with the exported table name.
+     Do not leave example chunks inside HTML comments: knitr still runs them. -->
+
+## Robustness
+
+## Heterogeneity and mechanisms
+
+<!-- Tie interpretation to the design verdict; state limitations. -->
+# Discussion and limitations
+
+# Conclusion
+
+::: {#refs}
+:::
+
+# Appendix

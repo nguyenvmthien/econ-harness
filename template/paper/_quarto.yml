@@ -1,0 +1,17 @@
+project:
+  output-dir: ../output/paper
+format:
+  html:
+    toc: true
+    number-sections: true
+    embed-resources: true
+    format-links: false   # no "MS Word" link: DOCX exists only after `Rscript render.R docx`
+  docx:
+    reference-doc: reference.docx
+    number-sections: true
+    fig-dpi: 300
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+  message: false

@@ -1,0 +1,2 @@
+# {{SLUG}}
+Read PLAN.md and LOG.md before work except standalone `/ae-phacking` and `/ae-exogenous`, where they are optional if present. Canonical production-pipeline dataset: data/analysis.rds; scratch `/ae-phacking` may use any readable explicit/discovered tabular source without changing canonical inputs. Definitions: data/codebook.csv. Run the full production pipeline with `Rscript run_all.R`. Manuscript: paper/manuscript.qmd. Workspace rules: ../../AGENTS.md.

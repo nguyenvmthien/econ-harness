@@ -1,0 +1,5 @@
+---
+description: Develop and lock the research design and precommitted analyses
+---
+Read `PLAN.md` and `LOG.md`, load `ae-design` and the applicable `ae-methods` reference. Ask once for missing PLAN §1–8 details; build §9 from the methods framework and assumption table with stable IDs. If outcomes have not been examined, record prior directional hypotheses in §9a with `origin=pre-results`, show the plan and risks, and lock/commit only after explicit user approval; record date/hash and LOG entry. If outcomes were already seen, do not invent a pre-results lock: use `/ae-hark` to run and compare models, then append revised `origin=post-results` hypotheses and dated §12 deviations. Keep the original wording and commit history intact. Every identifying assumption in §6 needs a D/R row or written argument. Update Next.
+For an open-ended direction search on data whose outcomes have already been inspected, route to `/ae-phacking [scope]` before `/ae-hark`; the search shortlist is exploratory and must not be backdated into the pre-results plan.

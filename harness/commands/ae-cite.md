@@ -1,0 +1,4 @@
+---
+description: Add DOI-verified references using canonical bibliographic metadata
+---
+Read `PLAN.md` and `LOG.md`. For each DOI in `$ARGUMENTS`, skip existing DOI; call `get_bibtex`, and if resolution fails report exactly `DOI không resolve: <doi>` and do not modify `paper/references.bib` for that DOI. For each resolved DOI, generate the canonical citekey from title/author/year, append the returned BibTeX unchanged to `paper/references.bib`, compare metadata with `paper_get`, then run `verify_references`. Record metadata/CrossRef outcome in `literature/citation_checks.csv`; flag mismatches without silently fixing metadata. Add exactly one metadata-only row per DOI with `location` and `claim` empty; metadata checks do not validate a manuscript claim. Preserve all nine columns. Update Next and dated LOG entry.

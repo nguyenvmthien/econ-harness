@@ -1,0 +1,45 @@
+{
+  "name": "research-discovery-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for literature discovery (ResearchRabbit-style) over the Semantic Scholar Graph API and OpenAlex. Seed paper -> Similar / Earlier (references) / Later (citations) work + author network.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "research-discovery-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "data/journal-ranks.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "smoke": "node --import tsx scripts/smoke.ts",
+    "clean": "rimraf dist",
+    "ranks:import": "python scripts/import_journal_ranks.py",
+    "test:ranks": "node scripts/rank-test.mjs && node scripts/rank-mcp-test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "semantic-scholar",
+    "openalex",
+    "literature-discovery",
+    "research"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
