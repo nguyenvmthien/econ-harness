@@ -1,0 +1,19 @@
+---
+name: ae-estimate
+description: "Run estimations in R and export package-built tables"
+---
+<!-- GENERATED from harness/commands/ae-estimate.md by harness/scripts/sync-agents.mjs — edit the source, not this file. -->
+
+# Workflow
+
+Treat the text following `$ae-estimate` as `$ARGUMENTS` in the workflow below.
+
+If this workflow asks you to dispatch or call an `ae-*` specialist, spawn a generic subagent and instruct it to use the matching `$ae-*` skill. If multi-agent tools are unavailable, follow that specialist contract inline.
+
+Before any estimation, require both `data/analysis.rds` and `output/logs/data_quality_report.md` with final verdict `PASS` or `PASS WITH CAVEATS`. If either is missing or the report says `FAIL`, stop and direct the user to run `$ae-data`; an existing `analysis.rds` alone is not evidence that the dataset passed the data gate.
+
+Read PLAN.md and LOG.md if present. Stop and direct the user to `$ae-data` if `data/analysis.rds` is missing. Select PLAN §9 rows (`$ARGUMENTS` narrows to IDs); if §9 is empty, use requested models labelled EXPLORATORY following `ae-r-code` and the applicable `ae-methods` playbook. Before estimation, inspect §10 LOCKED, §9a hypothesis statuses, and §12 deviations. Only run precommitted specifications as confirmatory. Any new outcome, subgroup, specification, mechanism, or hypothesis selected after inspecting outcome results is EXPLORATORY; log it in §12 without altering the original lock or predicted direction. Group rows by script in `Script → output file`. Assign rows without a script to `R/02_describe.R`, `R/03_main.R`, `R/04_robustness.R`, or `R/05_extensions.R` according to purpose, and write the script plus a unique ID-prefixed output name into §9. Wave 1 is `02_*` and `03_*`; wave 2 is every other group, started only after wave 1 completes.
+
+For a wave containing one script group, implement inline under the `ae-coder` contract: make one script, run it, compare saved modelsummary output with the fitted model, and report estimate/SE/N consistency. For two or more independent script groups, dispatch one `ae-coder` per group in a single parallel batch; pass PLAN rows, data/codebook paths, script path, outputs, and methods reference. Integrate returned scripts, run them, verify outputs, update PLAN/LOG, and report results and failures. Do not treat exploratory results as planned evidence.
+
+After executing the selected models and checking their tables against fitted objects, report which estimates are stable across defensible robustness/diagnostic variants and which change sign, magnitude, precision or sample. Include null and failed results rather than choosing the best column. If the research goal is to rewrite hypotheses from these results, continue through `$ae-hark` for the evidence matrix and retrospective §9a/manuscript revision; a stable within-sample association is still not independent confirmation or causal identification.

@@ -16,3 +16,6 @@ Thumbs.db
 .Rproj.user/
 .Rhistory
 .RData
+
+# Agent planning notes (specs/plans) stay local
+docs/superpowers/

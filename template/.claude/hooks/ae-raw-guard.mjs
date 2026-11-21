@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * ae-raw-guard (Claude Code PreToolUse hook): data/raw is read-only for agents.
+ * ae-raw-guard (Claude Code and Codex PreToolUse hook): data/raw is read-only for agents.
  * Port of harness/extensions/ae-raw-guard.ts (omp) — same rules, no hard-coded paths.
  *
  * Blocks (exit 2 + reason on stderr):
  *   - Write / Edit / MultiEdit / NotebookEdit whose target path contains a `data/raw` segment;
+ *   - Codex apply_patch whose Add/Update/Delete/Move-to file path contains a `data/raw` segment;
  *   - Bash / PowerShell commands where one line mentions data/raw AND a mutating verb or a
  *     redirection into data/raw.
  * Reading data/raw is always allowed. Fails open on malformed input (never blocks by accident).
@@ -31,6 +32,16 @@ export function decide(event) {
     if (typeof p !== "string") return null;
     const abs = norm(isAbsolute(p) ? p : resolve(cwd, p)).toLowerCase();
     return RAW.test(abs) ? MSG : null;
+  }
+
+  if (tool === "apply_patch") {
+    const patch = typeof input.command === "string" ? input.command : typeof input.patch === "string" ? input.patch : "";
+    for (const m of patch.matchAll(/^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm)) {
+      const p = m[1].trim();
+      const abs = norm(isAbsolute(p) ? p : resolve(cwd, p)).toLowerCase();
+      if (RAW.test(abs)) return MSG;
+    }
+    return null;
   }
 
   if (tool === "Bash" || tool === "PowerShell") {

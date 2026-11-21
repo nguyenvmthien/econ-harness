@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Tests for the Claude Code raw-data guard (harness/claude/hooks/ae-raw-guard.mjs).
+ * Tests for the Claude Code / Codex raw-data guard (harness/claude/hooks/ae-raw-guard.mjs).
  * Checks the decision function and the real hook process (stdin JSON -> exit code).
  *   node harness/tests/raw-guard.test.mjs
  */
@@ -29,6 +29,11 @@ const cases = [
   ["Bash Rscript read raw", { tool_name: "Bash", tool_input: { command: "Rscript -e 'nrow(read.csv(\"data/raw/x.csv\"))'" } }, false],
   ["Bash unrelated rm", { tool_name: "Bash", tool_input: { command: "rm scratch/tmp.R" } }, false],
   ["Read tool", { tool_name: "Read", tool_input: { file_path: "data/raw/x.csv" } }, false],
+  ["Codex apply_patch add in raw", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Add File: data/raw/x.csv\n+a\n*** End Patch" } }, true],
+  ["Codex apply_patch update raw (Windows)", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: data\\raw\\x.csv\n@@\n-a\n+b\n*** End Patch" } }, true],
+  ["Codex apply_patch delete raw", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Delete File: /work/econ/projects/demo/data/raw/x.csv\n*** End Patch" } }, true],
+  ["Codex apply_patch move into raw", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: scratch/x.csv\n*** Move to: data/raw/x.csv\n*** End Patch" } }, true],
+  ["Codex apply_patch R script", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: R/01_build.R\n@@\n-x <- read.csv('data/raw/a.csv')\n+x <- read.csv('data/raw/b.csv')\n*** End Patch" } }, false],
 ];
 
 let failed = 0;

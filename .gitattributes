@@ -17,4 +17,10 @@
 # Generated from harness/ by harness/scripts/sync-agents.mjs; collapsed in GitHub diffs.
 .claude/** linguist-generated
 template/.claude/** linguist-generated
+.agents/skills/** linguist-generated
+template/.agents/skills/** linguist-generated
+.codex/hooks.json linguist-generated
+.codex/hooks/** linguist-generated
+template/.codex/hooks.json linguist-generated
+template/.codex/hooks/** linguist-generated
 harness/mcp/research-discovery/package-lock.json linguist-generated

@@ -115,6 +115,12 @@ if (-not (Has 'claude') -and (Confirm-Step 'Claude Code not found. Install it no
   Add-UserPath (Join-Path $env:USERPROFILE '.local\bin')
 }
 
+if (-not (Has 'codex') -and (Confirm-Step 'Codex CLI not found. Install it now?')) {
+  & npm install -g '@openai/codex'
+  if ($LASTEXITCODE -ne 0) { Warn "npm could not install Codex CLI (exit $LASTEXITCODE). Install it manually." }
+  Update-SessionPath
+}
+
 # --- 2. Environment variables (user scope) ------------------------------------------------------
 $econRoot = $Root -replace '\\', '/'
 [Environment]::SetEnvironmentVariable('ECON_ROOT', $econRoot, 'User')

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/ae-raw-guard.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking data/raw guard"
+          }
+        ]
+      }
+    ]
+  }
+}

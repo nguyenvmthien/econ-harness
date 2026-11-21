@@ -4,19 +4,22 @@ This guide explains the steps the README only lists. The binding rules for agent
 
 ## Workspace and projects
 
-- `/ae-new <slug>` runs at the workspace root. It copies `template/` to `projects/<slug>` and initialises Git and `renv`.
-- Every other command runs **inside the project**: in Orca, add `projects/<slug>` as its own repository, or `cd projects/<slug>` and run `claude`.
-- Each project carries its own `.claude/`. After updating the harness, run `node harness/scripts/sync-agents.mjs --projects` at the root to refresh existing projects.
+- Use `/ae-*` with Claude Code and the equivalent `$ae-*` skill with Codex. For example, `/ae-new <slug>` and `$ae-new <slug>` run at the workspace root and create `projects/<slug>` from `template/`.
+- Every other workflow runs **inside the project**: in Orca, add `projects/<slug>` as its own repository, or `cd projects/<slug>` and run `claude` or `codex`.
+- Each project carries its own `.claude/`, `.agents/skills/` and `.codex/`. After updating the harness, run `node harness/scripts/sync-agents.mjs --projects` at the root to refresh existing projects.
+- The same PreToolUse hook blocks writes to `data/raw` in both agents (Claude: `.claude/settings.json`; Codex: `.codex/hooks.json`, which covers `apply_patch` and shell commands). Codex loads it only after you trust the folder and approve the hook; open Codex at the project root so the hook path resolves.
+- Each project is its own Git repository, so Codex does not load the workspace `AGENTS.md` automatically; the project's `AGENTS.md` tells it to read `../../AGENTS.md` first.
+- Codex runs shell commands in its sandbox without network access by default. Steps that download (`renv::init()`, R package installs, `R/00_download.R`, DOI lookups via `curl`) will ask for approval to run outside the sandbox; approve them, or start Codex with network access enabled. The `research_discovery` MCP server is not affected.
 
 ## Steps
 
-### Literature: `/ae-lit`, `/ae-cite`
+### Literature: `/ae-lit` or `$ae-lit`, `/ae-cite` or `$ae-cite`
 
 `/ae-lit` uses the `research_discovery` MCP server to find and read papers and records evidence in `literature/EVIDENCE.csv`.
 
 References enter `paper/references.bib` only through `/ae-cite <DOI>`. The check status of each citation is kept in `literature/citation_checks.csv`; during `/ae-review` the `ae-citation-check` subagent independently rechecks every cited sentence in the manuscript.
 
-### Design: `/ae-plan`, `/ae-exogenous`
+### Design: `/ae-plan` or `$ae-plan`, `/ae-exogenous` or `$ae-exogenous`
 
 `/ae-plan` writes `PLAN.md`: question, hypotheses, data and model specifications. Results produced **before** the matching PLAN §9 row was written are labelled EXPLORATORY and cannot support a causal conclusion.
 
@@ -28,7 +31,7 @@ References enter `paper/references.bib` only through `/ae-cite <DOI>`. The check
 
 It does not run regressions, rank candidates by p-value, or change data, PLAN or the manuscript. Reports are saved in `output/logs/exogenous/`.
 
-### Data and estimation: `/ae-data`, `/ae-estimate`, `/ae-consolidate`
+### Data and estimation: `/ae-data` or `$ae-data`, `/ae-estimate` or `$ae-estimate`, `/ae-consolidate` or `$ae-consolidate`
 
 - Raw data reaches `data/raw` through `R/00_download.R` or files the user drops in, and is registered with `ae_register_raw()`. Agents never edit raw files; cleaning always happens in code.
 - `R/01_build.R` builds `data/analysis.rds`; variable definitions live in `data/codebook.csv`.
@@ -44,7 +47,7 @@ It does not run regressions, rank candidates by p-value, or change data, PLAN or
 | `R/05_extensions.R` | extensions |
 | `R/99_audit.R` | `output/logs/audit.md` (full) or `audit_manuscript.md` (manuscript only) |
 
-### Exploration: `/ae-phacking`, `/ae-hark`
+### Exploration: `/ae-phacking` or `$ae-phacking`, `/ae-hark` or `$ae-hark`
 
 These two commands are for finding research directions. Everything they produce is **EXPLORATORY**.
 
@@ -58,7 +61,7 @@ Variation is never called exogenous until independently verified, and a strong f
 
 `/ae-hark [ID...]` runs the actual models and robustness checks, compares sign, magnitude, SE/CI, samples and diagnostics, and writes an evidence matrix to `output/logs/hypothesis_reframe.md`. Revised hypotheses are added to PLAN §9a with `origin=post-results`; the original hypotheses and contrary results stay. Stability within one sample is neither an independent test nor causal evidence.
 
-### Writing and review: `/ae-write`, `/ae-review`, `/ae-final`
+### Writing and review: `/ae-write` or `$ae-write`, `/ae-review` or `$ae-review`, `/ae-final` or `$ae-final`
 
 - `/ae-write <section>` drafts a manuscript section in English and renders HTML for review.
 - `/ae-review` reruns the full pipeline and the full audit, and asks the `ae-referee` subagent for a referee report.

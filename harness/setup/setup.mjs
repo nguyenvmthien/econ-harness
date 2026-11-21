@@ -4,8 +4,8 @@
  *
  *   node harness/setup/setup.mjs [--skip-r] [--no-register] [--offline] [--no-verify]
  *
- *   1. check prerequisites (node, git, Rscript, quarto, python, claude, orca)
- *   2. generate .claude/ (Claude Code layer) from harness/            -> harness/scripts/sync-agents.mjs
+ *   1. check prerequisites (node, git, Rscript, quarto, python, claude, codex, orca)
+ *   2. generate .claude/, .agents/skills/ and .codex/ from harness/   -> harness/scripts/sync-agents.mjs
  *   3. build the research-discovery MCP server (npm ci + build)
  *   4. write machine-local omp configs (.omp/config.yml, template/.omp/config.yml; git-ignored)
  *   5. create template/paper/reference.docx (Quarto's bundled pandoc) if it is missing
@@ -21,6 +21,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { toolDefinitions } from "./tools.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MCP_DIR = join(ROOT, "harness", "mcp", "research-discovery");
@@ -55,13 +56,7 @@ console.log(`econ harness setup — root: ${ROOT}\n`);
 // 1. Prerequisites ---------------------------------------------------------------------------
 const nodeMajor = Number(process.versions.node.split(".")[0]);
 report(nodeMajor >= 18 ? "PASS" : "FAIL", "node >= 18", process.version);
-const tools = {
-  git: ["--version", true],
-  Rscript: ["--version", true],
-  quarto: ["--version", true],
-  [WIN ? "python" : "python3"]: ["--version", false],
-  claude: ["--version", false],
-};
+const tools = toolDefinitions(process.platform);
 const present = {};
 for (const [cmd, [arg, required]] of Object.entries(tools)) {
   present[cmd] = has(cmd);
@@ -71,14 +66,15 @@ for (const [cmd, [arg, required]] of Object.entries(tools)) {
   }
   report("PASS", `${cmd} on PATH`, firstLine(run(cmd, [arg]).out));
 }
+if (!present.claude && !present.codex) report("WARN", "agent CLI", "neither claude nor codex found — install at least one");
 present.orca = has("orca");
 report(present.orca ? "PASS" : "WARN", "orca CLI on PATH", present.orca ? "" : "optional; add the workspace in the Orca app instead");
 if (results.some((r) => r.status === "FAIL" && r.step.startsWith("node"))) process.exit(1);
 
-// 2. Claude Code layer -----------------------------------------------------------------------
+// 2. Generated agent layers -----------------------------------------------------------------
 {
   const r = run(process.execPath, [join(ROOT, "harness", "scripts", "sync-agents.mjs"), "--projects"]);
-  report(r.ok ? "PASS" : "FAIL", "generate .claude/ from harness/", r.ok ? firstLine(r.out) : tail(r.out));
+  report(r.ok ? "PASS" : "FAIL", "generate .claude/, .agents/skills/ and .codex/ from harness/", r.ok ? firstLine(r.out) : tail(r.out));
 }
 
 // 3. MCP server --------------------------------------------------------------------------------
@@ -132,11 +128,11 @@ else {
     const r = run("claude", ["mcp", "add", "-s", "user", "research_discovery", ...envPairs.flatMap((e) => ["-e", e]), "--", "node", entry]);
     report(r.ok ? "PASS" : "FAIL", "register MCP for Claude Code (user scope)", r.ok ? `keys: ${envPairs.map((e) => e.split("=")[0]).join(", ") || "none"}` : tail(r.out));
   } else report("SKIP", "register MCP for Claude Code", "claude not found");
-  if (has("codex")) {
+  if (present.codex) {
     run("codex", ["mcp", "remove", "research_discovery"]);
     const r = run("codex", ["mcp", "add", "research_discovery", ...envPairs.flatMap((e) => ["--env", e]), "--", "node", entry]);
-    report(r.ok ? "PASS" : "WARN", "register MCP for Codex", r.ok ? "" : tail(r.out));
-  }
+    report(r.ok ? "PASS" : "WARN", "register MCP for Codex", r.ok ? `keys: ${envPairs.map((e) => e.split("=")[0]).join(", ") || "none"}` : tail(r.out));
+  } else report("SKIP", "register MCP for Codex", "codex not found");
 }
 
 // 8. Verification ----------------------------------------------------------------------------
@@ -145,7 +141,7 @@ else {
   let r = run(process.execPath, [join(ROOT, "harness", "tests", "raw-guard.test.mjs")]);
   report(r.ok ? "PASS" : "FAIL", "raw-guard hook tests", r.ok ? firstLine(r.out.split("\n").pop()) : tail(r.out));
   r = run(process.execPath, [join(ROOT, "harness", "scripts", "sync-agents.mjs"), "--check"]);
-  report(r.ok ? "PASS" : "FAIL", ".claude/ in sync with harness/", firstLine(r.out));
+  report(r.ok ? "PASS" : "FAIL", "generated agent layers in sync with harness/", firstLine(r.out));
   if (present.Rscript && !flags.has("--skip-r")) {
     r = run("Rscript", [join("harness", "tests", "audit-smoke.R")]);
     report(r.ok ? "PASS" : "FAIL", "Rscript harness/tests/audit-smoke.R", r.ok ? "exit 0" : tail(r.out));
@@ -164,6 +160,6 @@ const warns = results.filter((r) => r.status === "WARN");
 console.log(`\n== Summary: ${results.length - fails.length - warns.length} ok, ${warns.length} warning(s), ${fails.length} failure(s) ==`);
 for (const r of [...fails, ...warns]) console.log(`  [${r.status}] ${r.step}${r.detail ? " — " + firstLine(r.detail) : ""}`);
 if (!fails.length) {
-  console.log("\nNext: open this folder in Orca (or run `claude` here), then `/ae-new smoke`.");
+  console.log("\nNext: open this folder in Orca, then use `/ae-new smoke` with Claude or `$ae-new smoke` with Codex.");
 }
 process.exit(fails.length ? 1 : 0);
