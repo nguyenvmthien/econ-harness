@@ -57,7 +57,7 @@ check(
 );
 
 // Journal ranks are optional: without data/journal-ranks.json the rank tool must fail with a clear
-// import hint and every other tool must still work (spec §3.7).
+// import hint and every other tool must still work.
 const HAS_RANKS = existsSync(new URL("../data/journal-ranks.json", import.meta.url));
 if (HAS_RANKS) {
   const aerAbdc = await call("journal_rank_lookup", { query: "0002-8282", source: "ABDC", field_of_research: "3801", limit: 5 });

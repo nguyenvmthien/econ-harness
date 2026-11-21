@@ -10,7 +10,8 @@
 
 | Bước | Ai làm | Ở đâu |
 |---|---|---|
-| Cài Git, Node LTS, R, RStudio, Quarto, Pandoc, Python, Rtools (winget) | `setup-windows.ps1` | §2 |
+| Cài Git, Node LTS, R, RStudio, Quarto, Python, Rtools bằng winget; bỏ qua phần mềm đã có | `setup-windows.ps1` | §2 |
+| Cài Orca từ GitHub Releases (hỏi trước) | `setup-windows.ps1` | §3 |
 | Thêm `R\bin` vào PATH (installer R không tự làm) | `setup-windows.ps1` | §2 |
 | Cài Claude Code (hỏi trước) | `setup-windows.ps1` | §2 |
 | Lưu `ECON_ROOT`, `OPENALEX_EMAIL`, `SEMANTIC_SCHOLAR_API_KEY`, `ELSEVIER_API_KEY` thành biến môi trường **user** | `setup-windows.ps1` | §2 |
@@ -61,8 +62,8 @@ powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1
 ```
 
 Script sẽ:
-1. Cài phần mềm còn thiếu bằng winget.
-2. Hỏi có cài Claude Code không.
+1. Cài phần mềm còn thiếu bằng winget. Phần mềm đã có (tìm thấy lệnh trên PATH, hoặc winget đã biết) được giữ nguyên.
+2. Hỏi có cài Orca và Claude Code không.
 3. Hỏi `OPENALEX_EMAIL` (nên có), `SEMANTIC_SCHOLAR_API_KEY`, `ELSEVIER_API_KEY` (Enter để bỏ qua).
 4. Gọi `node harness\setup\setup.mjs`, in bảng `PASS / WARN / FAIL / SKIP`.
 
@@ -75,7 +76,7 @@ Tuỳ chọn:
 | `-SkipInstall` | Không cài phần mềm (máy đã có đủ) |
 | `-SkipR` | Không cài gói R |
 | `-Offline` | Bỏ test MCP cần mạng |
-| `-NoPrompt` | Không hỏi; dùng biến môi trường có sẵn |
+| `-NoPrompt` | Không hỏi gì; dùng biến môi trường có sẵn, không cài Orca và Claude Code |
 
 **Nếu có dòng FAIL:** sửa theo §6, **mở PowerShell mới** (để PATH cập nhật), chạy lại script.
 
@@ -100,7 +101,7 @@ git commit -m "style: reference.docx"
 
 ## 3. Orca
 
-1. Cài Orca từ trang chính thức, mở app.
+1. Mở Orca (script đã cài nếu bạn đồng ý; nếu không, tải `orca-windows-setup.exe` ở https://github.com/stablyai/orca/releases).
 2. **Add repository** → chọn `C:\econ` (script đã tự thêm nếu có CLI `orca`).
 3. Trong cài đặt agent của Orca, đặt **Claude** làm agent mặc định.
 4. Mở agent mới trong workspace `econ` rồi chạy `/ae-new <slug>` (ví dụ `/ae-new fdi_vn`).
@@ -145,7 +146,7 @@ Ví dụ `mcp.json` cho omp (giữ các server khác):
 `setup.mjs` đã tự chạy mục **A**. Mục **B** làm tay một lần.
 
 **A. Tự động** (chạy lại bất cứ lúc nào: `node harness\setup\setup.mjs --skip-r`)
-- [ ] `node`, `git`, `Rscript`, `quarto`, `pandoc` đều PASS
+- [ ] `node`, `git`, `Rscript`, `quarto` đều PASS
 - [ ] `MCP build (dist/index.js)` PASS
 - [ ] `R packages` PASS (xem thêm WARN của nhóm gói phương pháp)
 - [ ] `register MCP for Claude Code` PASS
@@ -170,7 +171,7 @@ Ví dụ `mcp.json` cho omp (giữ các server khác):
 | Triệu chứng | Cách xử lý |
 |---|---|
 | `Rscript` not recognized | Mở PowerShell mới. Nếu vẫn lỗi: thêm `C:\Program Files\R\R-4.x.x\bin` vào PATH của user |
-| `node`/`quarto`/`pandoc` not recognized ngay sau khi cài | Mở PowerShell **mới** rồi chạy lại script |
+| `node`/`quarto` not recognized ngay sau khi cài | Mở PowerShell **mới** rồi chạy lại script |
 | `winget could not install RProject.Rtools` | Tải Rtools46 tại https://cran.r-project.org/bin/windows/Rtools/, tick "Add to PATH" |
 | Gói phương pháp (`fwildclusterboot`, `HonestDiD`, `contdid`...) WARN | Cài Rtools, mở PowerShell mới, chạy `Rscript harness\setup\install-packages.R` |
 | `MCP protocol test` FAIL | Kiểm tra mạng / proxy; đặt `OPENALEX_EMAIL`; chạy lại `node scripts\protocol-test.mjs` trong `harness\mcp\research-discovery` |

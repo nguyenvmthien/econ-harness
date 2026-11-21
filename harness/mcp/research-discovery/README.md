@@ -3,8 +3,10 @@
 Literature discovery over two free scholarly APIs, **Semantic Scholar Graph API** and **OpenAlex**,
 plus the **Elsevier API** (optional key) to fill abstracts the other two elide.
 Start from seed papers, then walk references, citations, similar work, bibliometric neighbors and
-authors. Read-only. Mounted in omp as `mcp__research_discovery_*` (registered in
-`~/.omp/agent/mcp.json`); used by the `ae-literature` skill and the `ae-lit-scout` agent.
+authors. Read-only. Used by the `ae-literature` skill and the `ae-lit-scout` agent.
+
+`harness/setup/setup.mjs` builds the server and registers it as `research_discovery` for Claude Code
+(user scope) and Codex. For omp, add it to `~/.omp/agent/mcp.json` under `"mcpServers"`.
 
 ## Tools
 
@@ -47,7 +49,7 @@ two is returned. `paper_id` accepts a DOI, Semantic Scholar id, `arXiv:…`, Ope
 - **Responses are cached in memory for one hour and on disk for 7 days** (`CACHE_TTL_MS`,
   `DISK_CACHE_TTL_MS`), and concurrent identical requests share one fetch. The disk cache
   (`~/.cache/research-discovery`, one JSON file per URL) is shared by every server process, and each
-  OMP session starts its own, so a paper one agent or session looked up is instant for the next.
+  agent session starts its own, so a paper one agent or session looked up is instant for the next.
   404s are cached for a day; 429s, 5xx and network errors never. Expired files are deleted at
   startup. `RESEARCH_DISCOVERY_CACHE_DIR` moves the cache, or disables it with `off`.
 - **All OpenAlex requests in a process share 8 in-flight slots** (`OPENALEX_MAX_IN_FLIGHT`). OpenAlex
@@ -82,7 +84,7 @@ Rebuild the local index with Python `openpyxl` installed:
 
 ```bash
 python -m pip install -r scripts/requirements-journal-ranks.txt
-npm run ranks:import -- \"C:/path/scimagojr 2025.csv\" \"C:/path/ABDC-JQL-2025.xlsx\"
+npm run ranks:import -- "C:/path/scimagojr 2025.csv" "C:/path/ABDC-JQL-2025.xlsx"
 ```
 
 Sources: [SCImago 2025](https://www.scimagojr.com/journalrank.php?year=2025), attribution to
@@ -97,21 +99,23 @@ SCImago Journal & Country Rank; [ABDC Journal Quality List](https://abdc.edu.au/
 | `SEMANTIC_SCHOLAR_API_KEY` | Optional free key (<https://www.semanticscholar.org/product/api>). Enables S2 as the primary source. |
 | `ELSEVIER_API_KEY` | Optional free key (<https://dev.elsevier.com>). Fills Elsevier abstracts in `paper_get`. |
 
-Set them in the server's `env` block in `~/.omp/agent/mcp.json`. `RESEARCH_DISCOVERY_CACHE_DIR`
+Setup passes them to the server when it registers it, so set them before running setup.
+For omp, put them in the server's `env` block in `~/.omp/agent/mcp.json`. `RESEARCH_DISCOVERY_CACHE_DIR`
 (optional) sets the disk-cache directory, or `off`.
 
 ## Build and test
 
+```bash
 npm ci
 npm run build                     # TypeScript -> dist/
 node scripts/protocol-test.mjs    # every tool over MCP stdio, disk cache off; exits 1 on failure
-npm run test:ranks                 # local matching, FoR/category filters, and offline MCP rank tool
+npm run test:ranks                # local matching, FoR/category filters, and offline MCP rank tool
 node scripts/bench.mjs            # latency and payload size per tool
 RESEARCH_DISCOVERY_CACHE_DIR="$(mktemp -d)" node scripts/bench.mjs cold   # rerun with same dir for warm
 ```
 
-`protocol-test.mjs` and `bench.mjs` start the server with the `research_discovery.env` block from
-`~/.omp/agent/mcp.json`, so they exercise the configured keys.
+`protocol-test.mjs` and `bench.mjs` read the keys from the environment, falling back to the
+`research_discovery.env` block in `~/.omp/agent/mcp.json`.
 
 Reference runs before the rank lookup tool, 11 benchmark calls. Without any variable (2026-10-22):
 19.5 s (previously 101 s); `tools/list` is 16 k characters (previously 46 k). With all three
